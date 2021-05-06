@@ -6,18 +6,34 @@
 //  Copyright © 2021 OkCupid. All rights reserved.
 //
 
+import Interfaces
 import XCTest
+
 @testable import FeatureA
 
 final class FeatureATests: XCTestCase {
     func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(FeatureA().text, "Hello, World!")
-    }
+        // Given
+        let networkInterface = MockNetworkInterface()
+        let testResult = ExampleModel(string: "TEST")
+        networkInterface.nextResult = testResult
+        let service = Service(networkInterface: networkInterface)
 
-    static var allTests = [
-        ("testExample", testExample),
-    ]
+        // When
+        let testExpectation = expectation(description: "expectation")
+        var resultModel: ExampleModel?
+        service.exampleTest { result in
+            switch result {
+            case .failure: ()
+            case .success(let model):
+                resultModel = model
+            }
+
+            testExpectation.fulfill()
+        }
+
+        // Then
+        wait(for: [testExpectation], timeout: 5)
+        XCTAssertEqual(testResult.string, resultModel?.string)
+    }
 }
